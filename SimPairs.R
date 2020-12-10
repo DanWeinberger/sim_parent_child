@@ -11,10 +11,8 @@ set.acq.rate.kid <- 0.6/365
 init.prev.kid=0.12
 init.prev.adult= init.prev.kid/2
 
-prob.transmit.kid <-0.70 #prob transmit to HH member
+prob.transmit.kid <-1 #prob transmit to HH member
 prob.transmit.adult <- prob.transmit.kid/10 #prob transmit to HH member
-
-#Note this model isn't quite right--there is no immunity built in. If a kid was just colonized with a strain, they are not likely to immediately be re-colonized
 
 #Generates simulated data from a Markov model for 365 time points
 # At each time point, can be 1: neither colonized; 2: child colonized; 3: adult colonized; 4: both coonized
@@ -31,4 +29,7 @@ abline(h=0.12)
 
 plot(adult.prevalence)
 abline(h=0.2)
+
+#1=uncolonized; 2=kid colonized; 3=adult colonized; 4=both colonized
+table(sim.data)
 
