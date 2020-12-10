@@ -31,3 +31,4 @@ abline(h=0.12)
 
 plot(adult.prevalence)
 abline(h=0.2)
+
