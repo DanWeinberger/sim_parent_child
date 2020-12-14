@@ -3,17 +3,19 @@
 
 source('SimFunc.R')
 set.seed(123)
-DurKid <- 60
+DurKid <- 60 # 2 month duration
 DurAdult <- 18 #Results in 54% clearing in 14 days
+
+init.prev.kid=0.12 #initial prevalence for the strain of interest
+init.prev.adult= init.prev.kid/2
+
+#These are a bit arbitrary
+#COMMUNITY acquisition rates
 set.acq.rate.adult <- 0.1/365
 set.acq.rate.kid <- 0.6/365
 
-init.prev.kid=0.12
-init.prev.adult= init.prev.kid/2
-
-prob.transmit.kid <-0.5 #prob transmit to HH member
-
-prob.transmit.adult <- prob.transmit.kid/10 #prob transmit to HH member
+prob.transmit.kid <-0.5 #prob kid transmits to HH member
+prob.transmit.adult <- prob.transmit.kid/10 #prob adult transmits to HH member
 
 #Generates simulated data from a Markov model for 365 time points
 # At each time point, can be 1: neither colonized; 2: child colonized; 3: adult colonized; 4: both coonized
