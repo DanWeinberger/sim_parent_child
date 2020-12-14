@@ -1,11 +1,16 @@
-#4 states: neither colonized; child colonized, parent colonized, both colonized
-#In Okie dokie, most common serotypes ~12% prevalence
+#In this simulation, we generate the colonization status each day for a child and their parent
+#We specify the community acuistion rate and the probability of transmitting
+#to a HH member if you are colonized
+#We track the household colonization status in 4 states: neither colonized; child colonized, parent colonized, both colonized
+#We also track individual colonization status as uncolonized, colonized from community acquisition or colonized from HH contact
+
 
 source('SimFunc.R')
 set.seed(123)
 DurKid <- 60 # 2 month duration
 DurAdult <- 18 #Results in 54% clearing in 14 days
 
+#these 2 values just initialize data but aren't critical to get right
 init.prev.kid=0.12 #initial prevalence for the strain of interest
 init.prev.adult= init.prev.kid/2
 
@@ -14,6 +19,7 @@ init.prev.adult= init.prev.kid/2
 set.acq.rate.adult <- 0.1/365
 set.acq.rate.kid <- 0.6/365
 
+#Probability of transmitting to HH members if colonized
 prob.transmit.kid <-0.5 #prob kid transmits to HH member
 prob.transmit.adult <- prob.transmit.kid/10 #prob adult transmits to HH member
 
