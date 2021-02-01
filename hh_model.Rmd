@@ -1,0 +1,87 @@
+---
+title: "compartmental model"
+author: "Dan Weinberger"
+date: "2/1/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(outbreaks)
+library(tidyverse)
+library(rstan)
+library(gridExtra)
+rstan_options (auto_write = TRUE)
+options (mc.cores = parallel::detectCores ())
+set.seed(3) # for reproductibility
+```
+ 
+ Follows case study of https://mc-stan.org/users/documentation/case-studies/boarding_school_case_study.html
+
+## Generate some data
+```{r}
+source('SimPairs.R')
+# #1=uncolonized; 2=kid colonized; 3=adult colonized; 4=both colonized
+#can think of each column as a household and each row as a day
+ table(HH.States[1,])
+ table(HH.States[2,])
+
+ obs1 <- as.vector(table(HH.States[1,]))
+```
+
+
+```{r}
+# time series of cases
+cases <- influenza_england_1978_school$in_bed  # Number of students in bed
+
+# total households
+N <- 300;
+
+# times
+n_days <- 365
+t <- seq(0, n_days, by = 1)
+t0 = 0 
+t <- t[-1]
+
+#initial conditions
+Sk_Ia_0 <- 1
+Ik_Sa_0 <- 1
+Sk_Sa0 <- N - Sa_Ia_0 - Ia_Sa_0
+Ik_Ia0 <- 0
+y0 = c(Sk_Sa = Sk_Sa0, Ik_Sa = Ik_Sa_0, Sk_Ia = Sk_Ia_0,Ik_Ia=Ik_Ia0)
+
+# data for Stan
+data_sir <- list(n_days = n_days, y0 = y0, t0 = t0, ts = t, N = N, cases = cases)
+
+# number of MCMC steps
+niter <- 2000
+
+```
+
+```{r}
+model <- stan_model("hh_multinomial.stan")
+
+```
+
+```{r}
+fit_sir_negbin <- sampling(model,
+                data = data_sir,
+                iter = niter,
+                chains = 4)
+
+```
+
+```{r}
+pars=c('beta', 'gamma')
+print(fit_sir_negbin, pars = pars)
+
+```
+
+```{r}
+stan_dens(fit_sir_negbin, pars = pars, separate_chains = TRUE)
+
+```
+
+
+ 
+ 
