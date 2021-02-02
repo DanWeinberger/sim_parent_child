@@ -20,14 +20,19 @@ functions {
       real Ik_Ia = y[4];
       real N = x_i[1];
       
-      real beta = theta[1];
-      real gamma = theta[2];
+      real lambda_k = theta[1];
+      real lambda_a = theta[2];
+      real mu_k = theta[3];
+      real mu_a = theta[4];
+      real delta_a_k = theta[5];
+      real delta_k_a = theta[6];
       
-      real dS_dt = -beta * I * S / N;
-      real dI_dt =  beta * I * S / N - gamma * I;
-      real dR_dt =  gamma * I;
+      real dSk_Sa_dt = -lambda_k*Sk_Sa + mu_a*Sk_Ia + mu_k*Ik_Sa  ;
+      real dSk_Ia_dt =  lambda_a*Sk_Sa - mu_a*Sk_Ia - (lambda_k + delta_a_k)*Sk_Ia  ;
+      real dIk_Sa_dt =  lambda_k*Sk_Sa - mu_k*Ik_Sa - (lambda_a + delta_k_a)*Ik_Sa  ;
+      real dIk_Ia =  (lambda_a + delta_k_a)*Ik_Sa + (lambda_k + delta_a_k)*Sk_Ia - Ik_Ia*(mu_k + mu_a) ;
       
-      return {dS_dt, dI_dt, dR_dt};
+      return {dSk_Sa_dt,dSk_Ia_dt,dIk_Sa_dt,dIk_Ia};
   }
 }
 
@@ -35,11 +40,11 @@ functions {
 // The input data is a vector 'y' of length 'N'.
 data {
   int<lower=1> n_days;
-  real y0[3];
+  real y0[4];
   real t0;
   real ts[n_days];
   int N;
-  int cases[n_days];
+  int cases[4];
 }
 
 transformed data {
@@ -48,30 +53,45 @@ transformed data {
 }
 
 parameters {
-  real<lower=0> gamma;
-  real<lower=0> beta;
-  real<lower=0> phi_inv;
+  real<lower=0> lambda_k;
+  real<lower=0> lambda_a;
+  real<lower=0> mu_k;
+  real<lower=0> mu_a;
+  real<lower=0> delta_a_k;
+  real<lower=0> delta_k_a;
 }
 
 transformed parameters{
-  real y[n_days, 3];
-  real phi = 1. / phi_inv;
+  real y[n_days, 4];
+  vector[4] y_last;  
+  real sum_last;
+  vector[4] y_prob_last; 
   {
-    real theta[2];
-    theta[1] = beta;
-    theta[2] = gamma;
+    real theta[6];
+    theta[1] = lambda_k;
+    theta[2] = lambda_a;
+    theta[3] = mu_k;
+    theta[4] = mu_a;
+    theta[5] = delta_a_k;
+    theta[6] = delta_k_a;
 
     y = integrate_ode_rk45(sir, y0, t0, ts, theta, x_r, x_i);
+    y_last = to_vector(y[n_days,:]);
+    sum_last = sum(y_last);
+    y_prob_last = y_last/sum_last;
   }
 }
 
 model {
   //priors
-  beta ~ normal(2, 1); //truncated at 0
-  gamma ~ normal(0.4, 0.5); //truncated at 0
-  phi_inv ~ exponential(5);
-  
+  lambda_k ~ normal(0.5, 0.5); //truncated at 0, close to uniform on [0,1]
+  lambda_a ~ normal(0.5, 0.5); //truncated at 0, close to uniform on [0,1]
+  mu_k ~ normal(0.016667, 0.01); //truncated at 0, close to uniform on [0,1]
+  mu_a ~ normal(0.07142, 0.5); //truncated at 0, close to uniform on [0,1]
+  delta_a_k ~ normal(0.5, 0.5); //truncated at 0, close to uniform on [0,1]
+  delta_k_a ~ normal(0.5, 0.5); //truncated at 0, close to uniform on [0,1]
+
   //sampling distribution
   //col(matrix x, int n) - The n-th column of matrix x. Here the number of infected people
-  cases ~ neg_binomial_2(col(to_matrix(y), 2), phi);
+  cases ~ multinomial(y_prob_last);
 }

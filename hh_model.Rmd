@@ -18,6 +18,7 @@ set.seed(3) # for reproductibility
  
  Follows case study of https://mc-stan.org/users/documentation/case-studies/boarding_school_case_study.html
 
+
 ## Generate some data
 ```{r}
 source('SimPairs.R')
@@ -26,19 +27,26 @@ source('SimPairs.R')
  table(HH.States[1,])
  table(HH.States[2,])
 
- obs1 <- as.vector(table(HH.States[1,]))
+ 
+ 
+ obs1 <- t(apply(HH.States, 1, function(x) table(x)))
+ #obs1 <-obs1[100:130,] #burn 100 days of obs
+ obs1 <- obs1[100,] #randomly take observation from day 100
+ #obs1plot(obs1[1]) 
+ 
+ 
 ```
 
 
 ```{r}
 # time series of cases
-cases <- influenza_england_1978_school$in_bed  # Number of students in bed
+cases <- obs1
 
 # total households
 N <- 300;
 
 # times
-n_days <- 365
+n_days <- nrow(cases)
 t <- seq(0, n_days, by = 1)
 t0 = 0 
 t <- t[-1]
@@ -46,12 +54,12 @@ t <- t[-1]
 #initial conditions
 Sk_Ia_0 <- 1
 Ik_Sa_0 <- 1
-Sk_Sa0 <- N - Sa_Ia_0 - Ia_Sa_0
+Sk_Sa0 <- N - Sk_Ia_0 - Ik_Sa_0
 Ik_Ia0 <- 0
 y0 = c(Sk_Sa = Sk_Sa0, Ik_Sa = Ik_Sa_0, Sk_Ia = Sk_Ia_0,Ik_Ia=Ik_Ia0)
 
 # data for Stan
-data_sir <- list(n_days = n_days, y0 = y0, t0 = t0, ts = t, N = N, cases = cases)
+data_sir <- list(n_days = n_days, y0 = y0, t0 = t0, ts = t, N = N, obs1 = cases)
 
 # number of MCMC steps
 niter <- 2000
