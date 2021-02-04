@@ -4,6 +4,8 @@ gen.pair.data<-function(acq.rate.kid= set.acq.rate.kid,
                         acq.rate.adult= set.acq.rate.adult,
                         clear.rate.kid= 1/DurKid,
                         clear.rate.adult= 1/DurAdult,
+                        DurKid=51,
+                        DurAdult=19,
                         DurImmKid=90,
                         DurImmAdult=90
                         ){

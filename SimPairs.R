@@ -7,17 +7,18 @@
 
 source('SimFunc.R')
 set.seed(123)
-DurKid <- 60 # 2 month duration
-DurAdult <- 18 #Results in 54% clearing in 14 days
+#Many of these parameters baed on Melegaro https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2870123/
+DurKid <- 51 # 2 month duration
+DurAdult <- 19 #Results in 54% clearing in 14 days
 
 #these 2 values just initialize data but aren't critical to get right
-init.prev.kid=0.12 #initial prevalence for the strain of interest
-init.prev.adult= init.prev.kid/2
+init.prev.kid=0.5 #initial prevalence for the strain of interest
+init.prev.adult= init.prev.kid/4
 
 #These are a bit arbitrary
 #COMMUNITY acquisition rates
-set.acq.rate.adult <- 0.1/365
-set.acq.rate.kid <- 0.6/365
+set.acq.rate.kid <- 0.012
+set.acq.rate.adult <- set.acq.rate.kid/3 #based on melegaro
 
 #Probability of transmitting to HH members if colonized
 prob.transmit.kid <- 0.5 #prob kid transmits to HH member
