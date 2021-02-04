@@ -86,10 +86,10 @@ model {
   //priors
   lambda_k ~ normal(0.5, 0.5); //truncated at 0, close to uniform on [0,1]
   lambda_a ~ normal(0.5, 0.5); //truncated at 0, close to uniform on [0,1]
-  mu_k ~ normal(0.016667, 0.01); //truncated at 0, close to uniform on [0,1]
-  mu_a ~ normal(0.07142, 0.5); //truncated at 0, close to uniform on [0,1]
-  delta_a_k ~ normal(0.5, 0.5); //truncated at 0, close to uniform on [0,1]
-  delta_k_a ~ normal(0.5, 0.5); //truncated at 0, close to uniform on [0,1]
+  mu_k ~ normal(0.016667, 0.00001); //truncated at 0, close to uniform on [0,1] normal(0.016667, 0.01)
+  mu_a ~ normal(0.07142, 0.00001); //truncated at 0, close to uniform on [0,1] normal(0.07142, 0.5)
+  delta_a_k ~ normal(0.5, 0.5); //truncated at 0, close to uniform on [0,1] normal(0.5, 0.5
+  delta_k_a ~ normal(0.00001, 0.00001); //truncated at 0, close to uniform on [0,1] normal(0.5, 0.5)
 
   //sampling distribution
   //col(matrix x, int n) - The n-th column of matrix x. Here the number of infected people

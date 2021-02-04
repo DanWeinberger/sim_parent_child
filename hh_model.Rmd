@@ -46,7 +46,7 @@ cases <- obs1
 N <- 300;
 
 # times
-n_days <- nrow(cases)
+n_days <- 60
 t <- seq(0, n_days, by = 1)
 t0 = 0 
 t <- t[-1]
@@ -59,7 +59,7 @@ Ik_Ia0 <- 0
 y0 = c(Sk_Sa = Sk_Sa0, Ik_Sa = Ik_Sa_0, Sk_Ia = Sk_Ia_0,Ik_Ia=Ik_Ia0)
 
 # data for Stan
-data_sir <- list(n_days = n_days, y0 = y0, t0 = t0, ts = t, N = N, obs1 = cases)
+data_sir <- list(n_days = n_days, y0 = y0, t0 = t0, ts = t, N = N, cases = cases)
 
 # number of MCMC steps
 niter <- 2000
@@ -80,7 +80,7 @@ fit_sir_negbin <- sampling(model,
 ```
 
 ```{r}
-pars=c('beta', 'gamma')
+pars=c('delta_k_a', 'delta_a_k','mu_k','mu_a','lambda_k','lambda_a')
 print(fit_sir_negbin, pars = pars)
 
 ```
