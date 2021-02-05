@@ -19,7 +19,7 @@ rr.func <- function(x){
   return(rr)
 }
 
-try.dur <- c(2,5,8,10,15,20,25,30,40,50,57,60,70,80,90,100,200,300)
+try.dur <- c(2,5,8,10,15,20,25,30,40,50,57,60,65,70,80,90,100,200,300)
 
 rr.all <- sapply( try.dur, function(x) { 
    res1<- replicate(1000,gen.pair.data(acq.rate.kid= 0.012,
@@ -37,14 +37,18 @@ rr.all <- sapply( try.dur, function(x) {
    return(mean.rr.data1)
 })
 
-
+#calculate true value for how much more common acquisition is for adults when a kid is present
 total.acq.adult <- (0.004 + 0.012*prob.transmit.kid)
 true.acq.rr <- total.acq.adult/0.004
 
 plot(try.dur, rr.all, xlab='Duration', ylab='Est RR', type='l')
 abline(h=true.acq.rr)
-abline(v=60, lty=2, col='gray')
+abline(v=67, lty=2, col='gray')
+abline(v=57, lty=2, col='gray')
 
-#Where it matches the true, the duration in kids is ~60; 
-#which is 3.16-fold higher than duration in adults. This is interesting because
-#acqrate in kids is 3x higher than in adults. so when ratio of acq rate in kids and adults=clearance rate vs kids and adults, get an unbiased estimate
+#"true" RR in adults  is 2.5 (adults with kid in HH have 2.5x more acquisitions)
+#Where the RR estimate matches the true, the duration in kids is ~67 (duration in adults set to 19)
+0.012/65*10000
+0.004/19*10000
+0.012/57*10000 #duration in kids 3x duration in adults
+##this doesn't quite fit --why?
