@@ -48,7 +48,7 @@ abline(v=57, lty=2, col='gray')
 
 #"true" RR in adults  is 2.5 (adults with kid in HH have 2.5x more acquisitions)
 #Where the RR estimate matches the true, the duration in kids is ~67 (duration in adults set to 19)
+0.004/19*10000 #adults duration vs acquisiton rate
 0.012/65*10000
-0.004/19*10000
 0.012/57*10000 #duration in kids 3x duration in adults
 ##this doesn't quite fit --why?
