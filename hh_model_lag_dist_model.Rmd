@@ -1,0 +1,116 @@
+---
+title: "compartmental model"
+author: "Dan Weinberger"
+date: "2/1/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(outbreaks)
+library(tidyverse)
+library(rstan)
+library(gridExtra)
+rstan_options (auto_write = TRUE)
+options (mc.cores = parallel::detectCores ())
+set.seed(3) # for reproductibility
+```
+ 
+ Follows case study of https://mc-stan.org/users/documentation/case-studies/boarding_school_case_study.html
+
+
+## Generate some data
+```{r}
+source('SimPairs.R')
+# #1=uncolonized; 2=kid colonized; 3=adult colonized; 4=both colonized
+#can think of each column as a household and each row as a day
+ table(HH.States[1,])
+ table(HH.States[2,])
+
+ 
+ 
+ obs1 <- t(apply(HH.States, 1, function(x) table(x)))
+ #obs1 <-obs1[100:130,] #burn 100 days of obs
+ obs1 <- obs1[100,] #randomly take observation from day 100
+ #obs1plot(obs1[1]) 
+ 
+ 
+```
+
+What we observe is the colonization state at a particular time slice. But colonized people were colonized at a previous time point, and it is possible that a negative person has already cleared the infection. 
+If *both* people infected, it is relative easy, we take date of sample, subtract a number drawn from a distribution of durations to get date of infection and infer which person was the primary infected person, then calculate per-day probability of transmission. If *one* person infected, it is more complicated becaause the uninfected person could have avoided colonization to that time point OR they could have been colonized and cleared already (we just know the are uncolonized at time); so q needs to depend on bothprobability of avoiding acquistion from the infected person and probability that they had been colonized and cleared it
+
+## first the easier scenario: both people infected
+```{r}
+
+# parameterized by mode (m) and standard deviation (sd):
+gen.duration <- function(n1=1000, mode.lower, mode.upper, sd.lower=1, sd.upper=1){
+        m1 <- runif(n=n1,mode.lower,mode.upper)
+        sd1 <- runif(n=n1,sd.lower,sd.upper) 
+        
+        ra1 <- ( m1 + sqrt( m1^2 + 4*sd1^2 ) ) / ( 2 * sd1^2 )
+        sh1 <- 1 + m1 * ra1
+        
+        duration1 <- rgamma(n=1000,sh1, ra1) #duration infectiousness
+        return(duration1)
+}
+
+duration.adult <- 1/gen.duration(mode.lower=1/20, mode.upper=1/15,sd.lower=0.05, sd.upper=0.05)
+duration.kid <-  1/gen.duration(mode.lower=1/56, mode.upper=1/28,sd.lower=0.01, sd.upper=0.01)
+
+hist(duration.adult)
+hist(duration.kid)
+
+```
+from day of sample,if both positive, what is probability that kid was colonized first?
+```{r}
+mean((duration.kid - duration.adult)> 0)
+```
+If child colonized, what is probability that adult escaped infection
+```{r}
+prob.inf.day.kid.adult= 0.02 #daily probability transmit from kid to adult
+prob.uninf.day.adult <- 1-prob.inf.day.kid.adult
+q.adult <- prob.uninf.day.adult^duration.kid
+hist(q.adult)
+```
+
+If adult colonized, what is probability that kid escaped infection. Even if the per-day probability of transmission is the same, shorter duration means less likely to transmit.
+```{r}
+prob.inf.day.adult.kid= 0.02 #daily probability transmit from adult to kid
+prob.uninf.day.kid <- 1-prob.inf.day.adult.kid
+q.kid <- prob.uninf.day.kid^duration.adult
+hist(q.kid)
+```
+
+What is probability that an adult is colonized, transmits to kid and then clears prior to sample?
+Set time of infection of adult as t=1, and colonized from t=1 to duration.adult; kid can be infected at any point and is colonized for duration.kid
+
+```{r}
+#Kid can be infected at any point when adult is colonized (1:duration.adult)
+day.kid.infected <- 
+        sapply(duration.adult, function(x) sample(1:round(x),size=1  ) )
+        
+day.kid.cleared <- round(day.kid.infected + duration.kid)
+
+Prob.adult.clear1 <- mean(duration.adult < day.kid.cleared  ) #Probability that adult clears before kid clears if adult is infected first
+
+Prob.adult.clear1
+```
+
+What is probability that a kid is colonized, transmits to adult and then clears prior to sample? Set time of infection of kid as t=1, and colonized from t=1 to duration.kid; adult can be infected at any point and is colonized for duration.adult
+```{r}
+
+#Adult can be infected at any point when kid is colonized (1:duration.kid)
+day.adult.infected <- 
+        sapply(duration.kid, function(x) sample(1:round(x),size=1  ) )
+        
+day.adult.cleared <- round(day.adult.infected + duration.adult)
+
+Prob.kid.clear1 <- mean(duration.kid < day.adult.cleared  ) #Probability that kid clears before adult clears if kid is infected first
+Prob.kid.clear1
+```
+
+
+
+ 
+ 
