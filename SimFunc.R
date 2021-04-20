@@ -9,8 +9,8 @@ gen.pair.data<-function(acq.rate.kid= set.acq.rate.kid,
                         DurImmKid=90,
                         DurImmAdult=90
                         ){
-  prob.transmit.kid.day<-prob.transmit.kid/DurKid
-  prob.transmit.adult.day<-prob.transmit.kid/DurAdult
+  prob.transmit.kid.day<- prob.transmit.kid/DurKid
+  prob.transmit.adult.day<- prob.transmit.adult/DurAdult
     
   WaneRateKid  <-  1/DurImmKid
   WaneRateAdult <- 1/DurImmAdult
