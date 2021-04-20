@@ -1,28 +1,29 @@
 #Generate data from a simple transition model
 ##States: 0 uncolonized; 1=colonized (non-HH); 2= uncolonized,immune 3=colonized (HH acquistions)
-gen.pair.data<-function(acq.rate.kid= set.acq.rate.kid,
-                        acq.rate.adult= set.acq.rate.adult,
+gen.pair.data<-function(logit.acq.rate.kid= set.logit.acq.rate.kid,
+                        logit.acq.rate.adult= set.logit.acq.rate.adult,
                         clear.rate.kid= 1/DurKid,
                         clear.rate.adult= 1/DurAdult,
                         DurKid=51,
                         DurAdult=19,
                         DurImmKid=90,
-                        DurImmAdult=90
+                        DurImmAdult=90, 
+                        ntimes=365,
+                        burn.days =100
                         ){
+  
+  acq.rate.kid <- exp(logit.acq.rate.kid )/ (1+exp(logit.acq.rate.kid))
+  acq.rate.adult <- exp(logit.acq.rate.adult )/ (1+exp(logit.acq.rate.adult))
+  
   prob.transmit.kid.day<- prob.transmit.kid/DurKid
   prob.transmit.adult.day<- prob.transmit.adult/DurAdult
     
   WaneRateKid  <-  1/DurImmKid
   WaneRateAdult <- 1/DurImmAdult
-  ntimes=365
     state<-matrix(NA, ncol=ntimes, nrow=2)
     
     transmit.kid.parent <- rep(0, ntimes)
     transmit.parent.kid <- rep(0, ntimes)
-    
-    
-    #Row1=kid
-    #Row2=parent
     
     state[1,1] <- rbinom(n=1, size=1, prob=init.prev.kid)
     state[2,1] <- rbinom(n=1, size=1, prob=init.prev.adult)
@@ -110,16 +111,7 @@ gen.pair.data<-function(acq.rate.kid= set.acq.rate.kid,
     }
     }
 
-    
-      #If person is colonized (x=1 or uncolonized (0,2))
-    #HH States: 1=uncolonized; 2=kid colonized; 3=adult colonized; 4=both colonized
-     HH.States <- apply(state,2, function(x){
-      if(x[1] %in% c(0,2) & x[2] %in% c(0,2) ){ z=1}
-      if(x[1] %in% c(1,3) & x[2] %in% c(0,2) ){ z=2}
-      if(x[1] %in% c(0,2) & x[2] %in% c(1,3)){ z=3}
-      if(x[1] %in% c(1,3) & x[2] %in% c(1,3)){ z=4}
-      return(z)
-      })
-    out.obj <- list('HH.States'=HH.States,'Individual_States'=state)
-  return(out.obj)
+    Individual_States <- state[,-(1:burn.days)]
+    Individual_States[Individual_States==3] <- 1
+  return(Individual_States)
 }
