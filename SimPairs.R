@@ -6,6 +6,7 @@
 
 
 source('sirFunc.R')
+source('LikelihoodFunc.R')
 library(dplyr)
 set.seed(123)
 
@@ -21,37 +22,29 @@ ilogit <-function(x){
   exp(x)/(1+exp(x))
 }
 
-#600 people, adult and child
+#Generate synthetic cross sectional data and tabulate the number of households
+#uninfected, with kid infected, adult infected, or both
 TrueData <-  replicate(600, sirHH( time=180, 
-                                  logit.beta=logit(c(1/60, 1/300)) , #comunity infection rate for kids and adults
-                                  logit.lambda= logit(c(0.00167,0.0167)), ##H infection rate for adult-kid and kid-adults
+                                  logit.beta=logit(c(1/100, 1/300)) , #comunity infection rate for kids and adults
+                                  logit.lambda= logit(c(1/600,1/60)), ##H infection rate for adult-kid and kid-adults
                                   logit.mu=logit(c(1/60,1/60)), #waning of protection from subsequent infection
                                   logit.delta=logit(c(1/60,1/30)), #1/duration for ids and adults
                                   burn.days=100
                                           ), 
                        simplify='array')
-TrueData50 <- t(TrueData[,50,] )
-Y <- as.vector(table(TrueData50[,1], TrueData50[,2]))
+TrueData80 <- t(TrueData[,80,] )
+#table(TrueData80[,1],TrueData80[,2])
+Y <- as.vector(table(factor(TrueData80[,1],levels=c('0','1')), factor(TrueData80[,2],levels=c('0','1'))))
 
-LL.hh <- function(parms){
-  simDat1 <-  t(replicate(sum(Y), sirHH(time=101, burn.days=100,logit.beta=parms[c(1,2)] ,
-                                                            logit.lambda=parms[c(3,4)]  
-                                        ), simplify='array'))
-  Y.hat <- as.vector(table(simDat1[,1], simDat1[,2]))
-  pi <- Y.hat/sum(Y.hat)
-  LL <- dmultinom(x=Y,  prob=pi, log = TRUE) #fits obs Y|pi
-  return(-LL)
-}
-
-#Set constraints to prevent extreme values (causes problems for optimization)
-lower.prob <- log(0.00001/(1- 0.00001))
-upper.prob <- log(0.99999/(1- 0.99999))
+#Set constraints for likelihood to prevent extreme values (causes problems for optimization)
+lower.prob <- logit(0.0001)
+upper.prob <- logit(0.9999)
 parms <-  c(0,0,0,0 )
 parms.l <- rep(lower.prob,length(parms))
 parms.u <- rep(upper.prob,length(parms))
 
 ptm <- proc.time()
-mod1 <- optim(parms,LL.hh, lower=parms.l, upper=parms.u, method='L-BFGS-B' )
+  mod1 <- optim(parms,LL.hh, lower=parms.l, upper=parms.u, method='L-BFGS-B' )
 proc.time() - ptm
 
 parms <- mod1$par

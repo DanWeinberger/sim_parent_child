@@ -1,7 +1,7 @@
 #HH transitions
 sirHH <- function( time=180, 
-                   logit.beta=logit(c(1/60, 1/300)) , #comunity infection rate for kids and adults
-                   logit.lambda= logit(c(0.00167,0.0167)), ##H infection rate for adult-kid and kid-adults
+                   logit.beta=logit(c(1/100, 1/300)) , #comunity infection rate for kids and adults
+                   logit.lambda= logit(c(1/600,1/60)), ##H infection rate for adult-kid and kid-adults
                    logit.mu=logit(c(1/60,1/60)), #waning of protection from subsequent infection
                    logit.delta=logit(c(1/60,1/30)), #1/duration for ids and adults
                    burn.days=100
@@ -24,12 +24,13 @@ sirHH <- function( time=180,
    for(j in 1:2){
     
     other.person <- ifelse(j==1,2,1)
-    prob_S <- X[other.person,c('I'),i-1]*X[j,c('S'),i-1]*(1-lambda[j]) + #stay uninfected from HH
-      X[j,c('S'),i-1]*(1-beta[j]) + #stay uninfected from community
+    prob_S <- ( X[j,c('S'),i-1]*(1-beta[j]) ) *  #Susceptible person escape infection from community
+                    (1-lambda[j])^X[other.person,c('I'),i-1] + #Susceptible person Escape infection from HH if HH member is infected
       X[j,c('R'),i-1]*mu[j] #transition from R to S
     
-    prob_I <- X[other.person,c('I'),i-1]*X[j,c('S'),i-1]*lambda[j] + #HH infect
-                        X[j,c('S'),i-1]*beta[j] + #community infect
+    prob_I <- (1-
+                 (X[j,c('S'),i-1]*(1-beta[j]) ) *  #Susceptible person escape infection from community
+                 (1-lambda[j])^X[other.person,c('I'),i-1]) + #stay uninfected community infect
                         X[j,c('I'),i-1]*(1-delta[j]) #Stay in I
     
     prob_R <- X[j,c('I'),i-1]*delta[j] + #recover but immune
