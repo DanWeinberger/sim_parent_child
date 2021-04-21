@@ -1,7 +1,10 @@
 #Generate data from a simple transition model
 ##States: 0 uncolonized; 1=colonized (non-HH); 2= uncolonized,immune 3=colonized (HH acquistions)
-gen.pair.data<-function(logit.acq.rate.kid= set.logit.acq.rate.kid,
-                        logit.acq.rate.adult= set.logit.acq.rate.adult,
+gen.pair.data<-function(logit.acq.rate.kid,
+                        logit.acq.rate.adult,
+                        logit.prob.transmit.kid ,
+                        logit.prob.transmit.adult ,
+                        
                         clear.rate.kid= 1/DurKid,
                         clear.rate.adult= 1/DurAdult,
                         DurKid=51,
@@ -14,6 +17,9 @@ gen.pair.data<-function(logit.acq.rate.kid= set.logit.acq.rate.kid,
   
   acq.rate.kid <- exp(logit.acq.rate.kid )/ (1+exp(logit.acq.rate.kid))
   acq.rate.adult <- exp(logit.acq.rate.adult )/ (1+exp(logit.acq.rate.adult))
+  
+  prob.transmit.kid <- exp(logit.prob.transmit.kid)/(1+exp(logit.prob.transmit.kid))
+  prob.transmit.adult <- exp(logit.prob.transmit.adult)/(1+exp(logit.prob.transmit.adult))
   
   prob.transmit.kid.day<- prob.transmit.kid/DurKid
   prob.transmit.adult.day<- prob.transmit.adult/DurAdult
@@ -110,7 +116,6 @@ gen.pair.data<-function(logit.acq.rate.kid= set.logit.acq.rate.kid,
       }
     }
     }
-
     Individual_States <- state[,-(1:burn.days)]
     Individual_States[Individual_States==3] <- 1
   return(Individual_States)
