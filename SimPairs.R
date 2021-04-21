@@ -25,8 +25,8 @@ ilogit <-function(x){
 #Generate synthetic cross sectional data and tabulate the number of households
 #uninfected, with kid infected, adult infected, or both
 TrueData <-  replicate(600, sirHH( time=180, 
-                                  logit.beta=logit(c(1/100, 1/300)) , #comunity infection rate for kids and adults
-                                  logit.lambda= logit(c(1/600,1/60)), ##H infection rate for adult-kid and kid-adults
+                                  logit.beta=logit(c(1/100, 1/600)) , #comunity infection rate for kids and adults
+                                  logit.lambda= logit(c(1/600,1/120)), ##H infection rate for adult-kid and kid-adults
                                   logit.mu=logit(c(1/60,1/60)), #waning of protection from subsequent infection
                                   logit.delta=logit(c(1/60,1/30)), #1/duration for ids and adults
                                   burn.days=100
@@ -44,8 +44,8 @@ parms.l <- rep(lower.prob,length(parms))
 parms.u <- rep(upper.prob,length(parms))
 
 ptm <- proc.time()
-  mod1 <- optim(parms,LL.hh, lower=parms.l, upper=parms.u, method='L-BFGS-B' )
+  mod1 <- optim(parms,LL.hh, lower=parms.l, obs=Y, upper=parms.u, method='L-BFGS-B' )
 proc.time() - ptm
 
-parms <- mod1$par
-ilogit(parms)
+parm.est <- mod1$par
+ilogit(parm.est)

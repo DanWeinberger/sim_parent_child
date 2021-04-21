@@ -24,13 +24,15 @@ sirHH <- function( time=180,
    for(j in 1:2){
     
     other.person <- ifelse(j==1,2,1)
+    
+     # Prob a susceptible person stays susceptible: S[i-1]*(1-beta[j])*(1-lambda[j])^other.switch
     prob_S <- ( X[j,c('S'),i-1]*(1-beta[j]) ) *  #Susceptible person escape infection from community
                     (1-lambda[j])^X[other.person,c('I'),i-1] + #Susceptible person Escape infection from HH if HH member is infected
       X[j,c('R'),i-1]*mu[j] #transition from R to S
-    
-    prob_I <- (1-
-                 (X[j,c('S'),i-1]*(1-beta[j]) ) *  #Susceptible person escape infection from community
-                 (1-lambda[j])^X[other.person,c('I'),i-1]) + #stay uninfected community infect
+
+    # Prob a susceptible person is infected: S[i-1]*(1- (1-beta[j])*(1-lambda[j])^other.switch)
+    prob_I <- X[j,c('S'),i-1]*
+            (1-(1-beta[j])*(1-lambda[j])^X[other.person,c('I'),i-1]) +  #Susceptible person escape infection from community
                         X[j,c('I'),i-1]*(1-delta[j]) #Stay in I
     
     prob_R <- X[j,c('I'),i-1]*delta[j] + #recover but immune
