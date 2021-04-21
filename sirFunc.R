@@ -1,11 +1,17 @@
 #HH transitions
-sirHH <- function(time=180,  
-                  beta=c(1/60, 1/300) , #community infection rate for kids and adults
-                  lambda= c(0.00167,0.0167), ##H infection rate for adult-kid and kid-adults
-                  mu=c(1/60,1/60), #waning of protection from subsequent infection
-                  delta=c(1/60,1/30), #1/duration for ids and adults
-                          burn.days=100)  {
+sirHH <- function( time=180, 
+                   logit.beta=logit(c(1/60, 1/300)) , #comunity infection rate for kids and adults
+                   logit.lambda= logit(c(0.00167,0.0167)), ##H infection rate for adult-kid and kid-adults
+                   logit.mu=logit(c(1/60,1/60)), #waning of protection from subsequent infection
+                   logit.delta=logit(c(1/60,1/30)), #1/duration for ids and adults
+                   burn.days=100
+)  {
 
+  beta <- ilogit(logit.beta)
+  lambda <- ilogit(logit.lambda)
+  delta <- ilogit(logit.delta)
+  mu <- ilogit(logit.mu)
+  
   X <- array(NA, dim=c(2,3,time))
   dimnames(X)[[1]] <- c('kid','adult')
   dimnames(X)[[2]] <- c('S','I','R')

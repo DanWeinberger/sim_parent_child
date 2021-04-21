@@ -13,12 +13,20 @@ set.seed(123)
 # At each time point, can be 1: neither colonized; 2: child colonized; 3: adult colonized; 4: both colonized
 #Each column is a household
 
+logit <- function(x){
+  log(x/(1-x))
+}
+
+ilogit <-function(x){
+  exp(x)/(1+exp(x))
+}
+
 #600 people, adult and child
 TrueData <-  replicate(600, sirHH( time=180, 
-                                  beta=c(1/60, 1/300) , #comunity infection rate for kids and adults
-                                  lambda= c(0.00167,0.0167), ##H infection rate for adult-kid and kid-adults
-                                  mu=c(1/60,1/60), #waning of protection from subsequent infection
-                                  delta=c(1/60,1/30), #1/duration for ids and adults
+                                  logit.beta=logit(c(1/60, 1/300)) , #comunity infection rate for kids and adults
+                                  logit.lambda= logit(c(0.00167,0.0167)), ##H infection rate for adult-kid and kid-adults
+                                  logit.mu=logit(c(1/60,1/60)), #waning of protection from subsequent infection
+                                  logit.delta=logit(c(1/60,1/30)), #1/duration for ids and adults
                                   burn.days=100
                                           ), 
                        simplify='array')
@@ -26,8 +34,8 @@ TrueData50 <- t(TrueData[,50,] )
 Y <- as.vector(table(TrueData50[,1], TrueData50[,2]))
 
 LL.hh <- function(parms){
-  simDat1 <-  t(replicate(sum(Y), sirHH(time=101, burn.days=100,beta=parms[c(1,2)] ,
-                                                            lambda=parms[c(3,4)]  
+  simDat1 <-  t(replicate(sum(Y), sirHH(time=101, burn.days=100,logit.beta=parms[c(1,2)] ,
+                                                            logit.lambda=parms[c(3,4)]  
                                         ), simplify='array'))
   Y.hat <- as.vector(table(simDat1[,1], simDat1[,2]))
   pi <- Y.hat/sum(Y.hat)
@@ -42,6 +50,9 @@ parms <-  c(0,0,0,0 )
 parms.l <- rep(lower.prob,length(parms))
 parms.u <- rep(upper.prob,length(parms))
 
-
+ptm <- proc.time()
 mod1 <- optim(parms,LL.hh, lower=parms.l, upper=parms.u, method='L-BFGS-B' )
-exp(mod1$par)/(1+exp(mod1$par))
+proc.time() - ptm
+
+parms <- mod1$par
+ilogit(parms)
