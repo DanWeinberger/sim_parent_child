@@ -6,7 +6,7 @@ LL.hh <- function(par,obs){
   Y.hat <- as.vector(table(factor(simDat1[,1],levels=c('0','1')), 
                            factor(simDat1[,2],levels=c('0','1'))))
 
-  pi <- Y.hat/sum(Y.hat)+ 1e-8 #add small constant to prevent infinite LL if 0 count is found
+  pi <- Y.hat/sum(Y.hat)  + 1e-7 #add small constant to prevent infinite LL if 0 count is found
   LL <- dmultinom(x=Y,  prob=pi, log = TRUE) #fits obs Y|pi
   return(-LL)
 }

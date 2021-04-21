@@ -24,7 +24,7 @@ ilogit <-function(x){
 
 #Generate synthetic cross sectional data and tabulate the number of households
 #uninfected, with kid infected, adult infected, or both
-TrueData <-  replicate(600, sirHH( time=180, 
+TrueData <-  replicate(200, sirHH( time=180, 
                                   logit.beta=logit(c(1/100, 1/600)) , #comunity infection rate for kids and adults
                                   logit.lambda= logit(c(1/600,1/120)), ##H infection rate for adult-kid and kid-adults
                                   logit.mu=logit(c(1/60,1/60)), #waning of protection from subsequent infection
@@ -37,15 +37,18 @@ TrueData80 <- t(TrueData[,80,] )
 Y <- as.vector(table(factor(TrueData80[,1],levels=c('0','1')), factor(TrueData80[,2],levels=c('0','1'))))
 
 #Set constraints for likelihood to prevent extreme values (causes problems for optimization)
-lower.prob <- logit(0.0001)
-upper.prob <- logit(0.9999)
-parms <-  c(0,0,0,0 )
-parms.l <- rep(lower.prob,length(parms))
-parms.u <- rep(upper.prob,length(parms))
+# lower.prob <- logit(0.0001)
+# upper.prob <- logit(0.9999)
+# parms.l <- rep(lower.prob,length(parms))
+# parms.u <- rep(upper.prob,length(parms))
+
+parms <-  logit(c(0.1,0.1,0.1,0.1 ))
 
 ptm <- proc.time()
-  mod1 <- optim(parms,LL.hh, lower=parms.l, obs=Y, upper=parms.u, method='L-BFGS-B' )
+  #mod1 <- optim(parms,LL.hh, lower=parms.l, obs=Y, upper=parms.u, method='L-BFGS-B' )
+  mod1 <- nlm(LL.hh, parms, obs=Y )
+
 proc.time() - ptm
 
-parm.est <- mod1$par
+parm.est <- mod1$estimate
 ilogit(parm.est)
