@@ -1,3 +1,7 @@
+#Probability a person is colonized at time t depends on 
+#community risk of infection,Hh risk of infection (if HH member colonized) 
+#and duration of colonization
+
 #HH transitions
 sirHH <- function( time=180, 
                    logit.beta, #=logit(c(1/100, 1/300)) , #comunity infection rate for kids and adults

@@ -1,5 +1,5 @@
 LL.hh <- function(par,obs){
-  simDat1 <-  t(replicate(sum(Y), sirHH(time=101, burn.days=100,
+  simDat1 <-  t(replicate(10000, sirHH(time=101, burn.days=100,
                                         logit.beta=par[c(1,2)] ,
                                         logit.lambda=par[c(3,4)]  
   ), simplify='array'))
@@ -10,3 +10,5 @@ LL.hh <- function(par,obs){
   LL <- dmultinom(x=Y,  prob=pi, log = TRUE) #fits obs Y|pi
   return(-LL)
 }
+
+

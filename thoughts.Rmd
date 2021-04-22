@@ -1,0 +1,68 @@
+---
+title: "Thoughts"
+author: "Dan Weinberger"
+date: "4/22/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Over a particular time interval, a person's probability of becoming colonized depends on community risk of infection, household risk of infection, and duration of colonization. 
+
+d=duration of colonization
+alpha=HH transmission probability (per day)
+lambda= community probability of infection
+A=colonization status of household contact
+T=time horizon
+
+Probability of becoming colonized over a time range T:
+P_col = 1 - [(1-lambda)^T * (1-alpha)^(A*T)]
+
+If colonized, probability that you remain colonized is:
+P_remain = (1- 1/d)^T
+
+So prevalence is P_col*P_remain?
+
+
+
+
+Let's pretend lambda=0.01; alpha=0.02, d=30, A=1
+
+
+
+```{r}
+lambda=0.001
+alpha=0.02
+d=30
+A=1
+
+#Prob of acquiring colonization in 1 day:
+P_col_day = 1 - (1-lambda) * (1- alpha)^(A)
+prevalence <- P_col_day * d #Prevalence= incidence*duration at steady state
+prevalence
+```
+
+But in our case, we need to link together P_col_day in kids and adults. I think we can split this out an calculate prevalence acquired from HH member and prevalence acquired from community. We can get prob of being both infected if independent (multiply prevalence). This forms a system of 2 equations with 2 unknowns.  This can be re-written as 
+
+prevalence[j] = d[j]*[1 - (1-lambda[j]) * (1- alpha[j])^(prevalence[other.person])]
+
+
+```{r}
+ lambda=c(0.001,0.001) #Community acquisition for kids, adults
+ alpha=c(0.02,0.02) #HH transmission adult to kid and kid to adult
+ d= c(60, 30)   #Duration for kids, adults
+ prevalence <- rep(NA,2)
+ 
+ prevalence[1] <- d[1]*( 1 - (1-lambda[1]) * (1- alpha[1])^(prevalence[2]))
+ prevalence[2] <- d[2]*( 1 - (1-lambda[2]) * (1- alpha[2])^(prevalence[1]))
+    
+```
+
+
+
+
+
+
+

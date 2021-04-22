@@ -1,5 +1,5 @@
 #HH transitions
-sirHH <- function( time=180, 
+sirHHGen <- function( time=180, 
                    logit.beta, #=logit(c(1/100, 1/300)) , #comunity infection rate for kids and adults
                    logit.lambda, #= logit(c(1/600,1/60)), ##H infection rate for adult-kid and kid-adults
                    logit.mu=logit(c(1/60,1/60)), #waning of protection from subsequent infection
@@ -13,17 +13,13 @@ sirHH <- function( time=180,
   mu <- ilogit(logit.mu)
   
   X <- array(NA, dim=c(2,3,time))
-  probs <- array(NA, dim=c(2,3,time))
-  
-    dimnames(X)[[1]] <- c('kid','adult')
+  dimnames(X)[[1]] <- c('kid','adult')
   dimnames(X)[[2]] <- c('S','I','R')
-  
-  dimnames(probs)[[1]] <- c('kid','adult')
-  dimnames(probs)[[2]] <- c('S','I','R')
 
    X[,c('I'),1] <- rbinom(2,1,beta)
    X[,c('S'),1] <- 1 - X[,c('I'),1]
    X[,c('R'),1] <- 0
+   X[,,1]
 
   for(i in 2:time){
    for(j in 1:2){
@@ -45,13 +41,12 @@ sirHH <- function( time=180,
     prob_R <- X[j,c('I'),i-1]*delta[j] + #uninfected but immune
                         X[j,c('R'),i-1]*(1-mu[j]) #stay recovered
       
-    probs[j,,i] <- c(prob_S,prob_I,prob_R)
-    
-   #  X[j,,i] <- probs #which state is person in?
-    
-    X[j,,i] <- rmultinom(1,1,probs[j,,i]) #which state is person in?
+    probs <- c(prob_S,prob_I,prob_R)
+   # X[j,,i] <- probs
+    X[j,,i] <- rmultinom(1,1,probs) #which state is person in?
    }
- 
+   
+
   }
     return(X[,'I',-c(1:burn.days)])
 }

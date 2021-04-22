@@ -6,8 +6,10 @@
 
 
 source('sirFunc.R')
+source('sirFuncGen.R') #Generate observed 2x2 table of co-occurrence
 source('LikelihoodFunc.R')
 library(dplyr)
+library(pbapply)
 set.seed(123)
 
 #Generates simulated data from a Markov model for 365 time points
@@ -24,7 +26,7 @@ ilogit <-function(x){
 
 #Generate synthetic cross sectional data and tabulate the number of households
 #uninfected, with kid infected, adult infected, or both
-TrueData <-  replicate(200, sirHH( time=180, 
+TrueData <-  replicate(200, sirHHGen( time=180, 
                                   logit.beta=logit(c(1/100, 1/600)) , #comunity infection rate for kids and adults
                                   logit.lambda= logit(c(1/600,1/120)), ##H infection rate for adult-kid and kid-adults
                                   logit.mu=logit(c(1/60,1/60)), #waning of protection from subsequent infection
@@ -42,7 +44,7 @@ Y <- as.vector(table(factor(TrueData80[,1],levels=c('0','1')), factor(TrueData80
 # parms.l <- rep(lower.prob,length(parms))
 # parms.u <- rep(upper.prob,length(parms))
 
-parms <-  logit(c(0.1,0.1,0.1,0.1 ))
+parms <-  logit(c(0,0,0,0))
 
 ptm <- proc.time()
   #mod1 <- optim(parms,LL.hh, lower=parms.l, obs=Y, upper=parms.u, method='L-BFGS-B' )
