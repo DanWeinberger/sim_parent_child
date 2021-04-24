@@ -26,11 +26,12 @@ ilogit <-function(x){
 
 #Generate synthetic cross sectional data and tabulate the number of households
 #uninfected, with kid infected, adult infected, or both
-TrueData <-  replicate(200, sirHHGen( time=180, 
-                                  logit.beta=logit(c(1/100, 1/600)) , #comunity infection rate for kids and adults
-                                  logit.lambda= logit(c(1/600,1/120)), ##H infection rate for adult-kid and kid-adults
-                                  logit.mu=logit(c(1/60,1/60)), #waning of protection from subsequent infection
-                                  logit.delta=logit(c(1/60,1/30)), #1/duration for ids and adults
+#set beta to be small, representing low risk from individual ST
+TrueData <-  replicate(2000, sirHHGen( time=180, 
+                                  logit.beta=logit(c(1/150, 1/(365*2))/10  ) , #comunity infection rate for kids and adults #Make this Very small to represent ST-specfici risk
+                                  logit.lambda= logit(c(0.1*1/120, 0.5*1/120)), ##H infection rate for adult-kid and kid-adults  #HH txn rate per day from adult to child prev*prob.transmit.day
+                                  logit.mu=logit(c(1/30,1/30)), #waning of protection from subsequent infection
+                                  logit.delta=logit(c(1/60,1/21)), #1/duration for kids and adults
                                   burn.days=100
                                           ), 
                        simplify='array')
@@ -44,11 +45,24 @@ Y <- as.vector(table(factor(TrueData80[,1],levels=c('0','1')), factor(TrueData80
 # parms.l <- rep(lower.prob,length(parms))
 # parms.u <- rep(upper.prob,length(parms))
 
-parms <-  logit(c(0,0,0,0))
-
+parms <-  c(0,0,0,0)
+#parms <- c(logit(c(1/150, 1/(365*2))), logit(c(0.1*1/120, 0.5*1/120)) ) #feed in correct parms
 ptm <- proc.time()
   #mod1 <- optim(parms,LL.hh, lower=parms.l, obs=Y, upper=parms.u, method='L-BFGS-B' )
   mod1 <- nlm(LL.hh, parms, obs=Y )
+
+proc.time() - ptm
+
+parm.est <- mod1$estimate
+1/ilogit(parm.est)
+
+
+#TEST holding adult constant
+parms <-  logit(rep(0.001,4))
+#parms <- c(logit(c(1/150, 1/(365*2))), logit(c(0.1*1/120, 0.5*1/120)) ) #feed in correct parms
+ptm <- proc.time()
+#mod1 <- optim(parms,LL.hh, lower=parms.l, obs=Y, upper=parms.u, method='L-BFGS-B' )
+mod1 <- nlm(LL.hh.test, parms, obs=Y, steptol=1e-3 )
 
 proc.time() - ptm
 

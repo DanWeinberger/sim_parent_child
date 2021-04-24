@@ -2,8 +2,8 @@
 sirHHGen <- function( time=180, 
                    logit.beta, #=logit(c(1/100, 1/300)) , #comunity infection rate for kids and adults
                    logit.lambda, #= logit(c(1/600,1/60)), ##H infection rate for adult-kid and kid-adults
-                   logit.mu=logit(c(1/60,1/60)), #waning of protection from subsequent infection
-                   logit.delta=logit(c(1/60,1/30)), #1/duration for ids and adults
+                   logit.mu=logit(c(1/365,1/365)), #waning of protection from subsequent infection
+                   logit.delta=logit(c(1/60,1/21)), #1/duration for ids and adults
                    burn.days=100
 )  {
 

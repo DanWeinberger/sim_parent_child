@@ -48,6 +48,8 @@ But in our case, we need to link together P_col_day in kids and adults. I think 
 
 prevalence[j] = d[j]*[1 - (1-lambda[j]) * (1- alpha[j])^(prevalence[other.person])]
 
+This isn't really super helpful--it tells us the probability that person 1 is colonized and person 2 is colonized, but not the probability that they are both colonized at the same time, which is what we care about for linking model back to the data.
+
 
 ```{r}
  lambda=c(0.001,0.001) #Community acquisition for kids, adults
@@ -61,6 +63,25 @@ prevalence[j] = d[j]*[1 - (1-lambda[j]) * (1- alpha[j])^(prevalence[other.person
 ```
 
 
+Try to find some reasonable values
+```{r}
+
+d <- 60 #duration in kids, days
+prev.adult <- 0.1
+alpha= prev.adult* 1/60 #HH txn rate per day from adult to child prev*prob.transmit.day
+lambda <- 1/150 #community acquisition rate
+
+prevalence.kid <- d*( 1 - (1-lambda) * (1- alpha)^(prev.adult))
+prevalence.kid
+
+
+d <- 21 #duration in adult, days
+alpha= prevalence.kid* 1/60 #HH txn rate per day from child to adult ault*prob.transmit.day
+lambda <- 1/(365*2) #community acquisition rate
+prev.adult.est <- d*( 1 - (1-lambda) * (1- alpha)^(prevalence.kid))
+prev.adult.est
+
+```
 
 
 

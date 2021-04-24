@@ -3,7 +3,7 @@
 LL.hh.test <- function(par,obs){
   betas <-rnorm(2,0,4)
   lambdas <-rnorm(2,0,4)
-  simDat1 <-  t(replicate(10000, sirHH(time=101, burn.days=100,
+  simDat1 <-  t(replicate(100, sirHH(time=101, burn.days=100,
                                         logit.beta=betas,
                                         logit.lambda=lambdas  
   ), simplify='array'))
@@ -19,18 +19,27 @@ LL.hh.test <- function(par,obs){
   return(out.list)
 }
 
-test1 <- pbreplicate(20, LL.hh.test(), simplify=F)
+test1 <- pbreplicate(100, LL.hh.test(), simplify=F)
 
 ll <- sapply(test1,'[[', 'negLL')
 
-betas <- t(ilogit(sapply(test1,'[[', 'logit.betas')))
-lambdas <- t(ilogit(sapply(test1,'[[', 'logit.lambda')))
+betas <- as.data.frame(t(ilogit(sapply(test1,'[[', 'logit.betas'))))
+names(betas) <- c('beta1','beta2')
+  
+lambdas <- as.data.frame(t(ilogit(sapply(test1,'[[', 'logit.lambda'))))
+names(lambdas) <- c('lambda1','lambda2')
 
 compare.parms <- cbind.data.frame(ll, betas, lambdas)
 
-ll.large <- which(ll>100)
+#This makes it looks like beta1 and beta2 are not identifiable and 
+#la
+compare.parms$comb1 <- compare.parms$beta1*compare.parms$lambda1
+compare.parms$comb2 <- compare.parms$beta2*compare.parms$lambda2
+compare.parms$comb3 <- compare.parms$lambda1*compare.parms$lambda2
+compare.parms$comb4 <- compare.parms$beta1*compare.parms$beta2
 
-inf.betas <- betas[which(is.infinite((ll))),][1,]
-inf.lambdas <- lambdas[which(is.infinite((ll))),][1,]
+
+
+
 
 

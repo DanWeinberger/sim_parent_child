@@ -1,9 +1,9 @@
 #HH transitions
-sirHH <- function( time=180, 
+sirHH <- function( times=180, 
                    logit.beta, #=logit(c(1/100, 1/300)) , #comunity infection rate for kids and adults
                    logit.lambda, #= logit(c(1/600,1/60)), ##H infection rate for adult-kid and kid-adults
-                   logit.mu=logit(c(1/60,1/60)), #waning of protection from subsequent infection
-                   logit.delta=logit(c(1/60,1/30)), #1/duration for ids and adults
+                   logit.mu=logit(c(1/365,1/365)), #waning of protection from subsequent infection
+                   logit.delta=logit(c(1/60,1/21)), #1/duration for ids and adults
                    burn.days=100
 )  {
 
@@ -12,8 +12,8 @@ sirHH <- function( time=180,
   delta <- ilogit(logit.delta)
   mu <- ilogit(logit.mu)
   
-  X <- array(NA, dim=c(2,3,time))
-  probs <- array(NA, dim=c(2,3,time))
+  X <- array(NA, dim=c(2,3,times))
+  probs <- array(NA, dim=c(2,3,times))
   
     dimnames(X)[[1]] <- c('kid','adult')
   dimnames(X)[[2]] <- c('S','I','R')
@@ -25,7 +25,7 @@ sirHH <- function( time=180,
    X[,c('S'),1] <- 1 - X[,c('I'),1]
    X[,c('R'),1] <- 0
 
-  for(i in 2:time){
+  for(i in 2:times){
    for(j in 1:2){
     
     other.person <- ifelse(j==1,2,1)
@@ -47,12 +47,15 @@ sirHH <- function( time=180,
       
     probs[j,,i] <- c(prob_S,prob_I,prob_R)
     
-   #  X[j,,i] <- probs #which state is person in?
-    
+    if(is.na(sum(probs[j,,i]))){
+      X[j,,i] <- X[j,,i-1]
+    }else{
     X[j,,i] <- rmultinom(1,1,probs[j,,i]) #which state is person in?
    }
  
-  }
-    return(X[,'I',-c(1:burn.days)])
+   }
+  } 
+  return(X[,'I',-c(1:burn.days)])
 }
+
 
