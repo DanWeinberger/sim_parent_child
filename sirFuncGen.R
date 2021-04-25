@@ -27,8 +27,8 @@ sirHHGen <- function( time=180,
     other.person <- ifelse(j==1,2,1)
     
     #probability of escaping infection for a susceptible person depends on community transmision rate and HH rate
-    prob_escape_infect <- ( X[j,c('S'),i-1]*(1-beta[j]) ) *  #Susceptible person escape infection from community
-      (1-lambda[j])^X[other.person,c('I'),i-1]  #Susceptible person escapes infection from HH
+    prob_escape_infect <- ( X[j,c('S'),i-1]*(1-beta[j]) ) #*  #Susceptible person escape infection from community
+      #(1-lambda[j])^X[other.person,c('I'),i-1]  #Susceptible person escapes infection from HH
     
      # Prob a susceptible person stays susceptible: S[i-1]*(1-beta[j])*(1-lambda[j])^other.person
     prob_S <- prob_escape_infect + #Susceptible person Escape infection from HH if HH member is infected
