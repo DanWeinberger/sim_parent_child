@@ -27,17 +27,26 @@ ilogit <-function(x){
 #Generate synthetic cross sectional data and tabulate the number of households
 #uninfected, with kid infected, adult infected, or both
 #set beta to be small, representing low risk from individual ST
-TrueData <-  replicate(2000, sirHHGen( time=180, 
-                                  logit.beta=logit(c(1/150, 1/(365*2))/10  ) , #comunity infection rate for kids and adults #Make this Very small to represent ST-specfici risk
+TrueData <-  replicate(2000, sirHH( time=400, 
+                                  logit.beta=logit(c(1/300/5, (1/365/20)  ) ) , #comunity infection rate for kids and adults #Make this Very small to represent ST-specfici risk
                                   logit.lambda= logit(c(0.1*1/120, 0.5*1/120)), ##H infection rate for adult-kid and kid-adults  #HH txn rate per day from adult to child prev*prob.transmit.day
-                                  logit.mu=logit(c(1/30,1/30)), #waning of protection from subsequent infection
-                                  logit.delta=logit(c(1/60,1/21)), #1/duration for kids and adults
-                                  burn.days=100
+                                  logit.mu=logit(c(1/60,1/60)), #waning of protection from subsequent infection
+                                  logit.delta=logit(c(1/60,1/21)), #1/duration of colonization for kids and adults
+                                  burn.days=1
                                           ), 
                        simplify='array')
-TrueData80 <- t(TrueData[,80,] )
+TrueData80 <- t(TrueData[,150,] )
 #table(TrueData80[,1],TrueData80[,2])
 Y <- as.vector(table(factor(TrueData80[,1],levels=c('0','1')), factor(TrueData80[,2],levels=c('0','1'))))
+
+#Check if TrueData is at steady state
+prev <- apply(TrueData,c(1,2), mean )
+plot(prev[1,])
+abline(v=60)
+plot(prev[1,],ylim=c(0,0.1))
+plot(prev[2,],ylim=c(0,0.01))
+plot(prev[1,]*prev[2,],ylim=c(0,0.001)) #Co-colonization
+
 
 #Set constraints for likelihood to prevent extreme values (causes problems for optimization)
 # lower.prob <- logit(0.0001)

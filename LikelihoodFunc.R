@@ -1,8 +1,9 @@
 LL.hh <- function(par,obs){
-  simDat1 <-  t(replicate(100, sirHH(time=101, burn.days=100,
+  simDat1 <-  replicate(1000, sirHH(time=150, burn.days=50,
                                         logit.beta=par[c(1,2)] ,
                                         logit.lambda=par[c(3,4)]  
-  ), simplify='array'))
+  ), simplify='array')
+  
   Y.hat <- as.vector(table(factor(simDat1[,1],levels=c('0','1')), 
                            factor(simDat1[,2],levels=c('0','1'))))
 

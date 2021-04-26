@@ -2,7 +2,7 @@
 sirHHGen <- function( time=180, 
                    logit.beta, #=logit(c(1/100, 1/300)) , #comunity infection rate for kids and adults
                    logit.lambda, #= logit(c(1/600,1/60)), ##H infection rate for adult-kid and kid-adults
-                   logit.mu=logit(c(1/365,1/365)), #waning of protection from subsequent infection
+                   logit.mu=logit(c(1/60,1/60)), #waning of protection from subsequent infection
                    logit.delta=logit(c(1/60,1/21)), #1/duration for ids and adults
                    burn.days=100
 )  {
@@ -16,7 +16,7 @@ sirHHGen <- function( time=180,
   dimnames(X)[[1]] <- c('kid','adult')
   dimnames(X)[[2]] <- c('S','I','R')
 
-   X[,c('I'),1] <- rbinom(2,1,beta)
+   X[,c('I'),1] <- rbinom(2,1,beta*(1/delta))
    X[,c('S'),1] <- 1 - X[,c('I'),1]
    X[,c('R'),1] <- 0
    X[,,1]
