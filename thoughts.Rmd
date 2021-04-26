@@ -26,8 +26,6 @@ P_remain = (1- 1/d)^T
 So prevalence is P_col*P_remain?
 
 
-
-
 Let's pretend lambda=0.01; alpha=0.02, d=30, A=1
 
 
@@ -59,7 +57,11 @@ This isn't really super helpful--it tells us the probability that person 1 is co
  
  prevalence[1] <- d[1]*( 1 - (1-lambda[1]) * (1- alpha[1])^(prevalence[2]))
  prevalence[2] <- d[2]*( 1 - (1-lambda[2]) * (1- alpha[2])^(prevalence[1]))
-    
+   
+ 
+ 
+ 
+  
 ```
 
 
@@ -83,7 +85,6 @@ prev.adult.est
 
 ```
 
-
-
+Prevalence gives probability that a person sampled on a random day will be positive. If adults and kids are independent, prev1*prev2=prev1_2. but because they are dependent, prev1_2 > prev1 x prev2. it is something like prev1xprev2 + prev1_from2 + prev2_from1 where prev1_from 2 is prevalence in person 1 resulting from transmission from person 2
 
 

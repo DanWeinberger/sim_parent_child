@@ -6,7 +6,6 @@
 
 
 source('sirFunc.R')
-source('sirFuncGen.R') #Generate observed 2x2 table of co-occurrence
 source('LikelihoodFunc.R')
 library(dplyr)
 library(pbapply)
@@ -27,11 +26,10 @@ ilogit <-function(x){
 #Generate synthetic cross sectional data and tabulate the number of households
 #uninfected, with kid infected, adult infected, or both
 #set beta to be small, representing low risk from individual ST
-TrueData <-  replicate(2000, sirHH( time=400, 
-                                  logit.beta=logit(c(1/300/5, (1/365/20)  ) ) , #comunity infection rate for kids and adults #Make this Very small to represent ST-specfici risk
-                                  logit.lambda= logit(c(0.1*1/120, 0.5*1/120)), ##H infection rate for adult-kid and kid-adults  #HH txn rate per day from adult to child prev*prob.transmit.day
-                                  logit.mu=logit(c(1/60,1/60)), #waning of protection from subsequent infection
-                                  logit.delta=logit(c(1/60,1/21)), #1/duration of colonization for kids and adults
+TrueData <-  replicate(1000, sirHH( time=400, 
+                                  logit.beta= logit(c(1/1200, 1/7000  ))  , #community infection rate for kids and adults #Make this Very small to represent ST-specfici risk
+                                  durR=c(60,60), #waning of protection from subsequent infection
+                                  durInf=c(60,21), #1/duration of colonization for kids and adults
                                   burn.days=1
                                           ), 
                        simplify='array')
@@ -41,38 +39,35 @@ Y <- as.vector(table(factor(TrueData80[,1],levels=c('0','1')), factor(TrueData80
 
 #Check if TrueData is at steady state
 prev <- apply(TrueData,c(1,2), mean )
-plot(prev[1,])
-abline(v=60)
+
+matplot(t(prev))
 plot(prev[1,],ylim=c(0,0.1))
 plot(prev[2,],ylim=c(0,0.01))
 plot(prev[1,]*prev[2,],ylim=c(0,0.001)) #Co-colonization
 
 
 #Set constraints for likelihood to prevent extreme values (causes problems for optimization)
-# lower.prob <- logit(0.0001)
-# upper.prob <- logit(0.9999)
-# parms.l <- rep(lower.prob,length(parms))
-# parms.u <- rep(upper.prob,length(parms))
+ lower.prob <- logit(0.0001)
+ upper.prob <- logit(0.9999)
+ parms.l <- rep(lower.prob,length(parms))
+ parms.u <- rep(upper.prob,length(parms))
 
-parms <-  c(0,0,0,0)
+parms <-  c(0,0)
 #parms <- c(logit(c(1/150, 1/(365*2))), logit(c(0.1*1/120, 0.5*1/120)) ) #feed in correct parms
 ptm <- proc.time()
-  #mod1 <- optim(parms,LL.hh, lower=parms.l, obs=Y, upper=parms.u, method='L-BFGS-B' )
-  mod1 <- nlm(LL.hh, parms, obs=Y )
+  mod1 <- optim(parms,LL.hh, lower=parms.l, obs=Y, upper=parms.u, method='L-BFGS-B' )
+  #mod1 <- nlm(LL.hh, parms, obs=Y )
 
 proc.time() - ptm
 
 parm.est <- mod1$estimate
-1/ilogit(parm.est)
+ilogit(parm.est)
 
 
-#TEST holding adult constant
-parms <-  logit(rep(0.001,4))
-#parms <- c(logit(c(1/150, 1/(365*2))), logit(c(0.1*1/120, 0.5*1/120)) ) #feed in correct parms
+parms <-  rep(0,2)
+
 ptm <- proc.time()
-#mod1 <- optim(parms,LL.hh, lower=parms.l, obs=Y, upper=parms.u, method='L-BFGS-B' )
-mod1 <- nlm(LL.hh.test, parms, obs=Y, steptol=1e-3 )
-
+mod1 <- nlm(LL.hh, parms, obs=Y)
 proc.time() - ptm
 
 parm.est <- mod1$estimate
