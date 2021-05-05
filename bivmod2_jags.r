@@ -18,23 +18,19 @@ biv_mod2 <- "model{
     psi[4,j] <-  1/denom[j] #psi_00
     
 
-    x[j] ~ dcat( psi[,j] )
+    y.cat[j] ~ dcat( psi[,j] )
     
     
   }
   
   DurInf.a <- 21
   DurInf.k <- 60
-  #if(DurInf.a<DurInf.k){
+
     dur.cocol.a <- DurInf.a 
     dur.cocol.k <- DurInf.a/2 #cocol of kids resulting from adult
-  #}else{
-  #  dur.cocol.a <- DurInf.k/2 
-  #  dur.cocol.k <- DurInf.k #cocol of kids resulting from adult
-  #}
-  
+
   comm.infect.rate.k <- exp(a1)/(1+exp(a1)) #ilogit
- # comm.infect.rate.a <- exp(b1)/(1+exp(b1)) #ilogit
+
   comm.infect.rate.a <- 1/7000 #FIX this based on HH without kids
 
   hh.infect.rate.k <- exp(c1)/(1+exp(c1)) #ilogit
@@ -46,22 +42,8 @@ biv_mod2 <- "model{
   c1 <- a1 + exp(a1.diff)
 
   b1 <- logit(comm.infect.rate.a)
- # b1 ~ dnorm(logit(1/7000),1/4)
   b1.diff ~ dnorm(0, 1)
   d1 <- b1 + exp(b1.diff) 
-
-  #Observation model
-  for (j in 1:n.pairs){
-    for(i in 1:n.groups){
-      logit(p[i,j]) = p0[i]    
-      y[j,i] ~ dbern(Xcat[x[j],i]*p[i,j]) #Xcat is a mat with 2^i rows and i columns
-    }
-  }
-  
-  #Priors
-  for(i in 1:n.groups){
-    p0[i] ~ dnorm(0,1e-1)
-  }
 
 }"
 
@@ -78,10 +60,8 @@ inits3=list(".RNG.seed"=c(789), ".RNG.name"='base::Wichmann-Hill')
 model_spec<-textConnection(biv_mod2)
 model_jags<-jags.model(model_spec, 
                        inits=list(inits1,inits2, inits3),
-                       data=list('y' =t(Y.dat),
-                                 'Xcat'=Xcat,
-                                 'n.pairs' =ncol(Y.dat),
-                                 'n.groups'=2),
+                       data=list('y.cat' = Y.cat,
+                                 'n.pairs' =ncol(Y.dat)),
                        n.adapt=10000, 
                        n.chains=3)
 
