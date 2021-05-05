@@ -1,12 +1,20 @@
 #HH transitions
 sirHH <- function( time=180, 
                    logit.beta, #=logit(c(1/100, 1/300)) , #comunity infection rate for kids and adults
+                   logit.lambda=0,
+                   hh.txn=F,
                       durR=c(60,60), #duration of protection from subsequent infection
                       durInf=c(60,21), #duration for ids and adults
                       burn.days=100
 )  {
   
   beta <- ilogit(logit.beta)
+  
+  if(hh.txn==T){
+    lambda <- ilogit(logit.lambda)
+  }else{
+    lambda=0
+  }
   
   delta <- 1/durInf
   mu <- 1/durR
@@ -29,7 +37,7 @@ sirHH <- function( time=180,
       other.person <- ifelse(j==1,2,1)
       
       #probability of escaping infection for a susceptible person depends on community transmision rate and HH rate
-      prob_escape_infect <- ( X[j,c('S'),i-1]*(1-beta[j]) )
+      prob_escape_infect <- ( X[j,c('S'),i-1]*(1-beta[j]) )*(1-lambda[j])^X[other.person,c('I'),i-1]
       
       # Prob a susceptible person stays susceptible: S[i-1]*(1-beta[j])*(1-lambda[j])^other.person
       prob_S <- prob_escape_infect + #Susceptible person Escape infection from HH if HH member is infected
