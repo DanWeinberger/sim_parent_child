@@ -52,8 +52,9 @@ abline(v=67, lty=2, col='gray')
 abline(v=57, lty=2, col='gray')
 
 
-plot(log(try.dur.adult), log(rr.all), xlab='log(Duration in Adults)', ylab='Est RR', col='white')
+plot(log(try.dur.adult), log(rr.all), xaxt='n',xlab='Duration in Adults', ylab='Est RR', col='white')
 text( log(try.dur.adult), log(rr.all),as.character(try.dur.kid.rep))
+axis(side=1, at=log(c(10,30,50,70,90,110)),c(10,30,50,70,90,110) )
 abline(h=log(true.acq.rr))
 abline(v=67, lty=2, col='gray')
 abline(v=57, lty=2, col='gray')
