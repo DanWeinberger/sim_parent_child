@@ -22,7 +22,7 @@ try.dur.kid.rep <- rep(try.dur.kid,each=3)
 try.dur.adult <- multiplier.adult*try.dur.kid.rep
 
 sim.fun1 <- function(x1,y1) { 
-   res1<- replicate(100,gen.pair.data(acq.rate.kid= 0.012,
+   res1<- replicate(200,gen.pair.data(acq.rate.kid= 0.012,
                                         acq.rate.adult= 0.004,
                                         clear.rate.kid= 1/x1,
                                         clear.rate.adult= 1/y1,
@@ -52,8 +52,8 @@ abline(v=67, lty=2, col='gray')
 abline(v=57, lty=2, col='gray')
 
 
-plot(try.dur.adult, log(rr.all), xlab='Duration in Adults', ylab='Est RR', col='white')
-text( try.dur.adult, log(rr.all),as.character(try.dur.kid.rep))
+plot(log(try.dur.adult), log(rr.all), xlab='log(Duration in Adults)', ylab='Est RR', col='white')
+text( log(try.dur.adult), log(rr.all),as.character(try.dur.kid.rep))
 abline(h=log(true.acq.rr))
 abline(v=67, lty=2, col='gray')
 abline(v=57, lty=2, col='gray')
