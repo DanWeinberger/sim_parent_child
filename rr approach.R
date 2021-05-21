@@ -27,14 +27,14 @@ sim.fun1 <- function(x1,y1) {
                                         clear.rate.kid= 1/x1,
                                         clear.rate.adult= 1/y1,
                                         DurImmKid=90,
-                                        DurKid=x,
-                                        DurAdult=y,
+                                        DurKid=x1,
+                                        DurAdult=y1,
                                         DurImmAdult=90), simplify=F)
    hh.data <- sapply(res1,'[[','HH.States')
    
    rr.data1 <- apply(hh.data,1,rr.func)
    mean.rr.data1 <- exp(mean(log(rr.data1)))
-   out.list=list('mean.rr.data'=mean.rr.data1, dur.kid=x, dur.adult=y)
+   out.list=list('mean.rr.data'=mean.rr.data1, dur.kid=x1, dur.adult=y1)
    return(mean.rr.data1)
 }
 
@@ -46,13 +46,14 @@ total.acq.adult <- (0.004 + 0.012*prob.transmit.kid)
 true.acq.rr <- total.acq.adult/0.004
 
 plot(try.dur.kid.rep, log(rr.all), xlab='Duration in kids', ylab='Est RR', col='white')
+
 text( try.dur.kid.rep, log(rr.all),as.character(try.dur.adult))
 abline(h=log(true.acq.rr))
 abline(v=67, lty=2, col='gray')
 abline(v=57, lty=2, col='gray')
 
 
-plot(log(try.dur.adult), log(rr.all), xaxt='n',xlab='Duration in Adults', ylab='Est RR', col='white')
+plot(log(try.dur.adult), log(rr.all), xaxt='n',xlab='Duration in Adults', ylab='Est log(RR)', col='white')
 text( log(try.dur.adult), log(rr.all),as.character(try.dur.kid.rep))
 axis(side=1, at=log(c(10,30,50,70,90,110)),c(10,30,50,70,90,110) )
 abline(h=log(true.acq.rr))
