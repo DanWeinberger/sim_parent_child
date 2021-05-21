@@ -24,6 +24,9 @@ gen.pair.data<-function(acq.rate.kid= set.acq.rate.kid,
     #Row1=kid
     #Row2=parent
     
+    init.prev.kid <- prob.transmit.kid.day*DurKid
+    init.prev.adult <- prob.transmit.adult.day*DurAdult
+    
     state[1,1] <- rbinom(n=1, size=1, prob=init.prev.kid)
     state[2,1] <- rbinom(n=1, size=1, prob=init.prev.adult)
     
