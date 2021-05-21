@@ -58,6 +58,15 @@ abline(h=log(true.acq.rr))
 abline(v=67, lty=2, col='gray')
 abline(v=57, lty=2, col='gray')
 
+bias <- log(rr.all) -log(true.acq.rr)
+
+plot(try.dur.adult,bias, col='white')
+text( try.dur.adult, bias,as.character(try.dur.kid.rep))
+
+abline(h=0)
+plot(try.dur.kid.rep,bias)
+plot( try.dur.adult/try.dur.kid.rep ,bias)
+
 #"true" RR in adults  is 2.5 (adults with kid in HH have 2.5x more acquisitions)
 #Where the RR estimate matches the true, the duration in kids is ~67 (duration in adults set to 19)
 0.004/19*10000 #adults duration vs acquisiton rate
