@@ -62,8 +62,8 @@ bias <- log(rr.all) -log(true.acq.rr)
 
 plot(try.dur.adult,bias, col='white')
 text( try.dur.adult, bias,as.character(try.dur.kid.rep))
-
 abline(h=0)
+
 plot(try.dur.kid.rep,bias)
 plot( try.dur.adult/try.dur.kid.rep ,bias)
 
