@@ -70,16 +70,25 @@ mod2 <- "model{
     #kappa is serotype-specific prevalence
     #delta is serotype-specific effect of being an adult
     #theta= random intercept to capture individual-level
-  logit(mu[i,1,j]) <- (alpha0 +          kappa[j] + theta[i,j] ) #Child
-  logit(mu[i,2,j]) <- (alpha0 + alpha1 + kappa[j] + delta[j] + theta[i,j] ) #adult
-       theta[i,j] ~ dnorm(0,prec.theta)
+ # logit(mu[i,1,j]) <- (alpha0 +          kappa[j] + theta[i,j] ) #Child
+ # logit(mu[i,2,j]) <- (alpha0 + alpha1 + kappa[j] + delta[j] + theta[i,j] ) #adult
+ # theta[i,j] ~ dnorm(0,prec.theta) #should this by centered on 0
+
+  logit(mu[i,1,j]) <- (kappa[j] + theta[i,j]  ) #Child
+  logit(mu[i,2,j]) <- (kappa[j] + delta[j] + theta[i,j]   ) #adult
+
+  kappa[j] <- alpha0 + kappa[j] #serotype-specific intercept
+  
+  theta[i,j] ~ dnorm(0,prec.theta) #effect for seeing same serotype in same HH
+
 
     }
   }
 
   for (j in 1:n.sts){
    kappa[j] ~ dnorm(0, prec.kappa)
-   delta[j] ~ dnorm(0, prec.delta)
+   delta.disp[j] ~ dnorm(0, prec.delta)
+   delta[j] <- alpha1 + delta.disp[j]
   }
   
   alpha0 ~dnorm(0,1e-4)
@@ -111,8 +120,7 @@ model_jags<-jags.model(model_spec,
                        n.adapt=1000, 
                        n.chains=1)
 
-params<-c('alpha0','alpha1',
-          'kappa', 'delta','prec.theta','prec.kappa','prec.delta')
+params<-c('kappa', 'delta','theta','prec.theta','prec.kappa','prec.delta')
 ##############################################
 #Posterior Sampling
 ##############################################
@@ -125,6 +133,16 @@ posterior_samples.all<-do.call(rbind,posterior_samples)
 plot(posterior_samples.all[,'kappa[1]'], posterior_samples.all[,'delta[1]'])
 plot(posterior_samples.all[,'kappa[1]'], type='l')
 plot(posterior_samples.all[,'delta[1]'], type='l')
+plot(posterior_samples.all[,'alpha0'], type='l')
+plot(posterior_samples.all[,'alpha1'], type='l')
+
+#If we combine Alpha0 + kappa, get a nicely mixed intercept!
+plot(posterior_samples.all[,'alpha0']+posterior_samples.all[,'kappa[1]'], type='l')
+
+#If we combine alpha1 + delta, get a nicely mixed serotype-specific effect of adult prev!
+plot(posterior_samples.all[,'alpha1']+posterior_samples.all[,'delta[1]'], type='l')
+plot(posterior_samples.all[,'alpha1']+posterior_samples.all[,'delta[2]'], type='l')
+
 
 plot(posterior_samples.all[,'prec.theta'], type='l')
 
@@ -133,7 +151,11 @@ sample.labs<-names(post_means)
 ci<-t(hdi(posterior_samples.all, credMass = 0.95))
 #ci<-matrix(sprintf("%.1f",round(ci,1)), ncol=2)
 row.names(ci)<-sample.labs
-serotypes <-
 
+#Serotype effect for adults--how much more common is the serotype in adults vs kids
 delta.ci <- ci[grep('delta[', sample.labs, fixed=T),]
 row.names(delta.ci) <- dimnames(a1.c)[[3]]
+
+#Serotype-specific intercept--just gives estimate of relative prevalence, in kids
+kappa.ci <- ci[grep('kappa[', sample.labs, fixed=T),]
+row.names(kappa.ci) <- dimnames(a1.c)[[3]]
