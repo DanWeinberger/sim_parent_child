@@ -2,6 +2,7 @@ library(readxl)
 library(reshape2)
 library(dplyr)
 library(lme4)
+library(rjags)
 
 a1a <- read_excel('./DONOTSYNC/20210311_overview.xlsx', sheet='OK-2')
 a1a$study= 'OK2'
@@ -47,8 +48,73 @@ b1.c <- dcast(b1.m, Var3+Var1  ~ Var2)
 names(b1.c) <- c('st','HH','child','parent')
 
 #This tests effect of child colonization on parent colonization, by serotype
+#There is probably a more direct approach to test this with a multivariate outcome
 mod1 <- glmer(parent ~ (child|st), family='binomial', data=b1.c)
 summary(mod1)
 rand1 <- ranef(mod1)$st
 rand1 <- rand1[order(rand1$child),]
 View(rand1)
+
+#As per Josh's suggestion, try a bivariate logistic regression with shared random intercept
+mod2 <- "model{
+  for (i in 1:n.hh){
+    for (j in 1:n.sts){
+
+  #Likelihood for observed data from kids and adults
+  y[i,1,j] ~ dbern(mu[i,1,j])
+  y[i,2,j] ~ dbern(mu[i,2,j])
+
+  logit(mu[i,1,j]) <- (alpha0 + delta[j]          +theta[i,j]) #Child
+  logit(mu[i,2,j]) <- (alpha0 + delta[j] + alpha1 +theta[i,j]) #adult
+  theta[i,j] ~ dnorm(kappa[j], disp.theta)
+    }
+  }
+  for (j in 1:n.sts){
+   kappa[j]~dnorm(0, disp.kappa)
+   delta[j] ~ dnorm(0, disp.delta)
+  }
+  
+  alpha0 ~dnorm(0,1e-4)
+  alpha1 ~dnorm(0,1e-4)
+
+  disp.theta ~ dgamma(0.001, 0.001)
+  disp.kappa ~ dgamma(0.001, 0.001)
+  disp.delta ~ dgamma(0.001, 0.001)
+
+}"
+
+##############################################################
+#Model Fitting
+##############################################################
+inits1=list(".RNG.seed"=c(123), ".RNG.name"='base::Wichmann-Hill')
+inits2=list(".RNG.seed"=c(456), ".RNG.name"='base::Wichmann-Hill')
+inits3=list(".RNG.seed"=c(789), ".RNG.name"='base::Wichmann-Hill')
+
+##############################################
+#Model Organization
+##############################################
+model_spec<-textConnection(mod2)
+model_jags<-jags.model(model_spec, 
+                       inits=list(inits1),
+                       data=list('y' = a1.c,
+                                 'n.hh' =dim(a1.c)[[1]],
+                                 'n.sts' =dim(a1.c)[[3]]
+                                 ),
+                       n.adapt=10000, 
+                       n.chains=1)
+
+params<-c('psi','comm.infect.rate.k',
+          'comm.infect.rate.a','hh.infect.rate.k', 'hh.infect.rate.a','a1','b1','c1','d1')
+##############################################
+#Posterior Sampling
+##############################################
+posterior_samples<-coda.samples(model_jags, 
+                                params, 
+                                n.iter=10000)
+posterior_samples.all<-do.call(rbind,posterior_samples)
+
+post_means<-apply(posterior_samples.all, 2, median)
+sample.labs<-names(post_means)
+ci<-t(hdi(posterior_samples.all, credMass = 0.95))
+#ci<-matrix(sprintf("%.1f",round(ci,1)), ncol=2)
+row.names(ci)<-sample.labs
