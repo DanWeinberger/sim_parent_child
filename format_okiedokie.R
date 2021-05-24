@@ -3,6 +3,7 @@ library(reshape2)
 library(dplyr)
 library(lme4)
 library(rjags)
+library(HDInterval)
 
 a1a <- read_excel('./DONOTSYNC/20210311_overview.xlsx', sheet='OK-2')
 a1a$study= 'OK2'
@@ -64,22 +65,29 @@ mod2 <- "model{
   y[i,1,j] ~ dbern(mu[i,1,j])
   y[i,2,j] ~ dbern(mu[i,2,j])
 
-  logit(mu[i,1,j]) <- (alpha0 + delta[j]          +theta[i,j]) #Child
-  logit(mu[i,2,j]) <- (alpha0 + delta[j] + alpha1 +theta[i,j]) #adult
-  theta[i,j] ~ dnorm(kappa[j], disp.theta)
+    #Alpha0=global intercept
+    #alpha1=global effect of being an adult
+    #kappa is serotype-specific prevalence
+    #delta is serotype-specific effect of being an adult
+    #theta= random intercept to capture individual-level
+  logit(mu[i,1,j]) <- (alpha0 +          kappa[j] + theta[i,j] ) #Child
+  logit(mu[i,2,j]) <- (alpha0 + alpha1 + kappa[j] + delta[j] + theta[i,j] ) #adult
+       theta[i,j] ~ dnorm(0,prec.theta)
+
     }
   }
+
   for (j in 1:n.sts){
-   kappa[j]~dnorm(0, disp.kappa)
-   delta[j] ~ dnorm(0, disp.delta)
+   kappa[j] ~ dnorm(0, prec.kappa)
+   delta[j] ~ dnorm(0, prec.delta)
   }
   
   alpha0 ~dnorm(0,1e-4)
   alpha1 ~dnorm(0,1e-4)
 
-  disp.theta ~ dgamma(0.001, 0.001)
-  disp.kappa ~ dgamma(0.001, 0.001)
-  disp.delta ~ dgamma(0.001, 0.001)
+  prec.kappa ~ dgamma(0.001, 0.001)
+  prec.theta ~ dgamma(0.001, 0.001)
+  prec.delta ~ dgamma(0.001, 0.001)
 
 }"
 
@@ -100,11 +108,11 @@ model_jags<-jags.model(model_spec,
                                  'n.hh' =dim(a1.c)[[1]],
                                  'n.sts' =dim(a1.c)[[3]]
                                  ),
-                       n.adapt=10000, 
+                       n.adapt=1000, 
                        n.chains=1)
 
-params<-c('psi','comm.infect.rate.k',
-          'comm.infect.rate.a','hh.infect.rate.k', 'hh.infect.rate.a','a1','b1','c1','d1')
+params<-c('alpha0','alpha1',
+          'kappa', 'delta','prec.theta','prec.kappa','prec.delta')
 ##############################################
 #Posterior Sampling
 ##############################################
@@ -113,8 +121,19 @@ posterior_samples<-coda.samples(model_jags,
                                 n.iter=10000)
 posterior_samples.all<-do.call(rbind,posterior_samples)
 
+
+plot(posterior_samples.all[,'kappa[1]'], posterior_samples.all[,'delta[1]'])
+plot(posterior_samples.all[,'kappa[1]'], type='l')
+plot(posterior_samples.all[,'delta[1]'], type='l')
+
+plot(posterior_samples.all[,'prec.theta'], type='l')
+
 post_means<-apply(posterior_samples.all, 2, median)
 sample.labs<-names(post_means)
 ci<-t(hdi(posterior_samples.all, credMass = 0.95))
 #ci<-matrix(sprintf("%.1f",round(ci,1)), ncol=2)
 row.names(ci)<-sample.labs
+serotypes <-
+
+delta.ci <- ci[grep('delta[', sample.labs, fixed=T),]
+row.names(delta.ci) <- dimnames(a1.c)[[3]]
