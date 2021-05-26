@@ -187,6 +187,7 @@ pos.mean.st <- t(sapply(1:ncol(pos.child), function(x){
   return(out.list)
   }))
 pos.mean.st <- cbind.data.frame(pos.mean.st,'st'=dimnames(a1.c)[[3]])
+View(pos.mean.st)
 
 plot(pos.mean.st[,1], pos.mean.st[,2], xlim=c(0,5), ylim=c(0,5))
 abline(a=0,b=1)
