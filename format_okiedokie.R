@@ -77,8 +77,6 @@ mod2 <- "model{
   logit(mu[i,1,j]) <- (kappa[j] + theta[i,j]  ) #Child
   logit(mu[i,2,j]) <- (kappa[j] + delta[j] + theta[i,j]   ) #adult
 
-  kappa[j] <- alpha0 + kappa[j] #serotype-specific intercept
-  
   theta[i,j] ~ dnorm(0,prec.theta) #effect for seeing same serotype in same HH
 
 
@@ -86,7 +84,8 @@ mod2 <- "model{
   }
 
   for (j in 1:n.sts){
-   kappa[j] ~ dnorm(0, prec.kappa)
+    kappa[j] <- alpha0 + kappa.disp[j] #serotype-specific intercept
+   kappa.disp[j] ~ dnorm(0, prec.kappa)
    delta.disp[j] ~ dnorm(0, prec.delta)
    delta[j] <- alpha1 + delta.disp[j]
   }
@@ -128,6 +127,8 @@ posterior_samples<-coda.samples(model_jags,
                                 params, 
                                 n.iter=10000)
 posterior_samples.all<-do.call(rbind,posterior_samples)
+saveRDS(posterior_samples.all,'posterior_samples_jags.rds')
+
 
 
 plot(posterior_samples.all[,'kappa[1]'], posterior_samples.all[,'delta[1]'])
@@ -146,6 +147,7 @@ plot(posterior_samples.all[,'alpha1']+posterior_samples.all[,'delta[2]'], type='
 
 plot(posterior_samples.all[,'prec.theta'], type='l')
 
+
 post_means<-apply(posterior_samples.all, 2, median)
 sample.labs<-names(post_means)
 ci<-t(hdi(posterior_samples.all, credMass = 0.95))
@@ -159,3 +161,29 @@ row.names(delta.ci) <- dimnames(a1.c)[[3]]
 #Serotype-specific intercept--just gives estimate of relative prevalence, in kids
 kappa.ci <- ci[grep('kappa[', sample.labs, fixed=T),]
 row.names(kappa.ci) <- dimnames(a1.c)[[3]]
+
+#this shows a bimodal distributio of theta--first is tightly clustered around
+#0, presumably these are HH with no infections, second distribution
+#is around ~1.5, presumably HH withat least one infection
+#Could filter this out and estimate theta if kid colonized or adult colonized
+post.means.theta <-post_means[grep('theta[', sample.labs, fixed=T)]
+hist(post.means.theta)
+hist(post.means.theta[post.means.theta>0.5])
+post.means.theta.mat <- matrix(post.means.theta, nrow=dim(a1.c)[[1]])
+pos.child <- a1.c[,1,]
+pos.adult <- a1.c[,2,]
+hist(post.means.theta.mat[pos.child==1])
+hist(post.means.theta.mat[pos.adult==1])
+
+#For each serotype calculate mean
+##Overall
+mean(post.means.theta.mat[pos.adult==1])
+mean(post.means.theta.mat[pos.child==1])
+pos.mean.st <- t(sapply(1:ncol(pos.child), function(x){
+  pos.mean.adult.st <- mean(post.means.theta.mat[pos.adult[,x]==1,x])
+  pos.kid.adult.st <- mean(post.means.theta.mat[pos.child[,x]==1,x])
+  out.list=c('pos.mean.adult.st'=pos.mean.adult.st,'pos.kid.adult.st'=pos.kid.adult.st)
+  out.list[is.nan(out.list)] <- 999
+  return(out.list)
+  }))
+pos.mean.st <- cbind.data.frame(pos.mean.st,'st'=dimnames(a1.c)[[3]])
